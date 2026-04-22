@@ -4,8 +4,8 @@
 
 | Name | SRN |
 |------|-----|
-| Manasi Vipin | PES1UG24CS260 |
-| Meghana Grandhi | PES1UG24CS268 |
+| Chaturya | PES1UG24CS126 |
+| CHaturya | PES1UG24CS120 |
 
 ---
 
