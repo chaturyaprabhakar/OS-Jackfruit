@@ -4,10 +4,8 @@
 
 | Name | SRN |
 |------|-----|
-| Chaturya | PES1UG24CS126 |
-| CHaturya | PES1UG24CS120 |
-
----
+| Chaturya Prabhakar | PES1UG24CS126 |
+| Catherine D | PES1UG24CS120 |
 
 ## 2. Build, Load, and Run Instructions
 
@@ -21,7 +19,7 @@ sudo apt install -y build-essential linux-headers-$(uname -r)
 ### Clone and enter the repo
 
 ```bash
-git clone https://github.com/manasi2915/OS-Jackfruit.git
+git clone https://github.com/chaturyaprabhakar/OS-Jackfruit.git
 cd OS-Jackfruit/boilerplate
 ```
 
@@ -148,67 +146,90 @@ ps aux | grep engine
 ## 3. Demo with Screenshots
 
 ### Screenshot 1 — Multi-container supervision
+
 Two containers (alpha, beta) running under one supervisor process.
-![screenshot1](screenshots/1.png)
+
+<img width="616" height="207" alt="image" src="https://github.com/user-attachments/assets/bd298d47-c8d8-4b78-8711-a4ec89ea7965" />
 
 
+**Caption:** Two containers alpha and beta both in running state under a single supervisor.
 
-*Caption: Two containers alpha and beta both in `running` state under a single supervisor.*
+---
 
 ### Screenshot 2 — Metadata tracking
+
 Output of `./engine ps` showing all tracked container metadata.
 
+<img width="650" height="194" alt="image" src="https://github.com/user-attachments/assets/98f41c4e-9e3e-49a8-9936-dd27eea634c9" />
 
-![screenshot2](screenshots/2.png)
 
-*Caption: `ps` command output showing ID, HOST PID, STATE, SOFT(MB), HARD(MB).*
+**Caption:** `ps` command output showing ID, HOST PID, STATE, SOFT(MB), HARD(MB).
+
+---
 
 ### Screenshot 3 — Bounded-buffer logging
+
 Log file contents captured through the logging pipeline.
 
+<img width="658" height="128" alt="image" src="https://github.com/user-attachments/assets/7834db83-813e-43cc-a924-46e04eec10b5" />
 
-![screenshot3](screenshots/3.png)
 
-*Caption: `./engine logs alpha` and `stop alpha` showing the logging pipeline and state change.*
+**Caption:** `./engine logs alpha` and `stop alpha` showing the logging pipeline and state change.
+
+---
 
 ### Screenshot 4 — CLI and IPC
+
 CLI command issued, supervisor responding via UNIX domain socket.
 
+<img width="659" height="99" alt="image" src="https://github.com/user-attachments/assets/062d5216-6e13-4a42-905a-8431d5af559f" />
 
-![screenshot4](screenshots/4.png)
-![screenshot4](screenshots/4.2.png)
-*Caption: `engine stop` and `engine ps` demonstrating the UNIX socket control channel.*
+
+**Caption:** `engine stop` and `engine ps` demonstrating the UNIX socket control channel.
+
+---
 
 ### Screenshot 5 — Soft-limit warning
-dmesg showing soft-limit warning event.
+
+`dmesg` showing soft-limit warning event.
+
+<img width="650" height="113" alt="image" src="https://github.com/user-attachments/assets/7f8b4192-a4f8-4ea8-a06f-5c75e1a516a2" />
 
 
-![screenshot5](screenshots/5.png)
+**Caption:** `dmesg` showing SOFT LIMIT event from the kernel module for container memtest.
 
-*Caption: `dmesg` showing SOFT LIMIT event from the kernel module for container memtest.*
+---
 
 ### Screenshot 6 — Hard-limit enforcement
-dmesg showing container killed + ps showing killed state.
+
+`dmesg` showing container killed + `ps` showing killed state.
+
+<img width="629" height="101" alt="image" src="https://github.com/user-attachments/assets/4b0e2b18-853f-466e-8722-e40e49102118" />
 
 
-![screenshot6](screenshots/6.png)
+**Caption:** `ps` showing memtest in killed state after kernel module enforced hard memory limit.
 
-*Caption: `ps` showing memtest in `killed` state after kernel module enforced hard memory limit.*
+---
 
 ### Screenshot 7 — Scheduling experiment
+
 Hipri vs lopri accumulator comparison.
 
+<img width="653" height="83" alt="image" src="https://github.com/user-attachments/assets/992533d1-f212-4294-ac33-4fc7dab6a30e" />
 
-![screenshot7](screenshots/7.png)
 
-*Caption: `logs hipri` vs `logs lopri` — hipri completed more work due to CFS priority difference (nice -5 vs nice +10).*
+**Caption:** `logs hipri` vs `logs lopri` — hipri completed more work due to CFS priority difference (nice -5 vs nice +10).
+
+---
 
 ### Screenshot 8 — Clean teardown
+
 Module unloaded, no zombie processes.
 
+<img width="620" height="109" alt="image" src="https://github.com/user-attachments/assets/2e2522f6-ade3-4eec-ae4d-06f27bd511b6" />
 
-![screenshot8](screenshots/8.png)
-*Caption: `dmesg` shows Module unloaded, all containers removed cleanly.*
+
+**Caption:** `dmesg` shows Module unloaded, all containers removed cleanly.
 
 ---
 
@@ -218,11 +239,11 @@ Module unloaded, no zombie processes.
 
 Our runtime achieves process and filesystem isolation using three Linux namespace flags passed to `clone(2)`:
 
-**CLONE_NEWPID** creates a new PID namespace. The first process inside the container appears as PID 1 from its own perspective, even though the host kernel assigns it a real host PID (visible in `engine ps`). This means container processes cannot see or send signals to host processes or other containers' processes. The kernel maintains the mapping between host PIDs and container-local PIDs internally.
+`CLONE_NEWPID` creates a new PID namespace. The first process inside the container appears as PID 1 from its own perspective, even though the host kernel assigns it a real host PID (visible in `engine ps`). This means container processes cannot see or send signals to host processes or other containers' processes. The kernel maintains the mapping between host PIDs and container-local PIDs internally.
 
-**CLONE_NEWUTS** gives each container its own hostname and domain name. We set the hostname to the container ID using `sethostname()` inside `child_fn`. Changes to the hostname inside the container do not affect the host or other containers.
+`CLONE_NEWUTS` gives each container its own hostname and domain name. We set the hostname to the container ID using `sethostname()` inside `child_fn`. Changes to the hostname inside the container do not affect the host or other containers.
 
-**CLONE_NEWNS** creates a private mount namespace. Any mounts performed inside the container (including `/proc`) are not visible on the host. This is critical for mounting `/proc` correctly for the new PID namespace — without a separate mount namespace, the container's `/proc` mount would pollute the host.
+`CLONE_NEWNS` creates a private mount namespace. Any mounts performed inside the container (including `/proc`) are not visible on the host. This is critical for mounting `/proc` correctly for the new PID namespace — without a separate mount namespace, the container's `/proc` mount would pollute the host.
 
 After forking, the child uses `chroot()` to make the container's assigned rootfs directory appear as `/`. We bind-mount the rootfs onto itself first (`mount --bind`) to make it a proper mountpoint, then call `chroot(".")`. Inside the new root, we mount `/proc` so that tools like `ps` and `/proc/self` work correctly within the container's PID namespace.
 
@@ -254,13 +275,13 @@ Without this synchronization, two producer threads could simultaneously read `co
 
 **Race conditions without synchronization:**
 - Without `metadata_lock`: a producer thread and a CLI command handler could simultaneously traverse and modify the container list, causing use-after-free or list corruption.
-- Without the ring buffer mutex: concurrent producers could produce duplicate `head` indices, overwriting each other's data.
+- Without the ring buffer mutex: concurrent producers could produce duplicate head indices, overwriting each other's data.
 - Without condition variables: threads would need to busy-poll, wasting CPU and potentially missing wakeup signals.
 
 **How the bounded buffer avoids lost data, corruption, and deadlock:**
-- Lost data: producers block on `not_full` rather than dropping chunks; data is only discarded if the supervisor explicitly shuts down.
-- Corruption: the mutex ensures only one thread modifies `head`/`tail`/`count` at a time.
-- Deadlock: we always acquire locks in the same order (buffer lock never held while acquiring metadata lock); `pthread_cond_wait` atomically releases the mutex and sleeps, preventing the classic missed-wakeup deadlock.
+- *Lost data:* producers block on `not_full` rather than dropping chunks; data is only discarded if the supervisor explicitly shuts down.
+- *Corruption:* the mutex ensures only one thread modifies `head`/`tail`/`count` at a time.
+- *Deadlock:* we always acquire locks in the same order (buffer lock never held while acquiring metadata lock); `pthread_cond_wait` atomically releases the mutex and sleeps, preventing the classic missed-wakeup deadlock.
 
 ### Memory Management and Enforcement
 
@@ -272,7 +293,7 @@ The enforcement mechanism belongs in kernel space for three reasons. First, user
 
 ### Scheduling Behavior
 
-Linux uses the Completely Fair Scheduler (CFS). CFS tracks a `vruntime` value for each runnable task — the amount of CPU time the task has consumed, weighted by its priority. The scheduler always picks the task with the smallest `vruntime` to run next. The `nice` value adjusts the weight: nice -20 gets the highest weight (most CPU), nice +19 gets the least.
+Linux uses the Completely Fair Scheduler (CFS). CFS tracks a `vruntime` value for each runnable task — the amount of CPU time the task has consumed, weighted by its priority. The scheduler always picks the task with the smallest `vruntime` to run next. The nice value adjusts the weight: nice -20 gets the highest weight (most CPU), nice +19 gets the least.
 
 **Experiment 1 — Two CPU-bound containers, different priorities:**
 
@@ -280,35 +301,50 @@ Both `hipri` (nice -5) and `lopri` (nice +10) ran `cpu_hog` for 30 seconds. CFS 
 
 **Experiment 2 — CPU-bound vs I/O-bound at same priority:**
 
-`cpuwork` ran `cpu_hog` (continuous computation) while `iowork` ran `io_pulse` (write/read bursts with 50ms sleeps). `cpuwork` consumed ~95% CPU when `iowork` was sleeping. When `iowork` woke up from sleep, CFS immediately scheduled it because its `vruntime` had fallen far behind during the sleep — CFS caps the vruntime deficit to avoid one process monopolising CPU after a long sleep, but still gives recently-sleeping tasks a scheduling boost. This caused `iowork` to respond within a single scheduler tick (<4ms), demonstrating CFS's responsiveness to I/O-bound workloads even under CPU pressure.
+`cpuwork` ran `cpu_hog` (continuous computation) while `iowork` ran `io_pulse` (write/read bursts with 50ms sleeps). `cpuwork` consumed ~95% CPU when `iowork` was sleeping. When `iowork` woke up from sleep, CFS immediately scheduled it because its `vruntime` had fallen far behind during the sleep — CFS caps the `vruntime` deficit to avoid one process monopolising CPU after a long sleep, but still gives recently-sleeping tasks a scheduling boost. This caused `iowork` to respond within a single scheduler tick (<4ms), demonstrating CFS's responsiveness to I/O-bound workloads even under CPU pressure.
 
 ---
 
 ## 5. Design Decisions and Tradeoffs
 
 ### Namespace Isolation
-**Choice:** Used `chroot` instead of `pivot_root` for filesystem isolation.  
-**Tradeoff:** `chroot` is slightly less secure — a process with `CAP_SYS_CHROOT` can escape it by calling `chroot` again from inside. `pivot_root` atomically replaces the root mount and unmounts the old root, making escape significantly harder.  
+
+**Choice:** Used `chroot` instead of `pivot_root` for filesystem isolation.
+
+**Tradeoff:** `chroot` is slightly less secure — a process with `CAP_SYS_CHROOT` can escape it by calling `chroot` again from inside. `pivot_root` atomically replaces the root mount and unmounts the old root, making escape significantly harder.
+
 **Justification:** For a controlled lab environment where we are launching known workloads as root, `chroot` provides sufficient isolation with much simpler setup code. `pivot_root` requires the new root to already be a mountpoint on a different filesystem than the current root, requiring additional mount gymnastics that add complexity without benefit here.
 
 ### Supervisor Architecture
-**Choice:** Single-process supervisor with a `select`-loop handling one client connection at a time.  
-**Tradeoff:** Command handling is serialised — if two CLI clients connect simultaneously, the second waits. A multi-threaded server could handle them in parallel but would require locking the metadata list on every handler invocation and careful socket lifecycle management.  
+
+**Choice:** Single-process supervisor with a select-loop handling one client connection at a time.
+
+**Tradeoff:** Command handling is serialised — if two CLI clients connect simultaneously, the second waits. A multi-threaded server could handle them in parallel but would require locking the metadata list on every handler invocation and careful socket lifecycle management.
+
 **Justification:** CLI commands are fast (no blocking I/O inside the handler — we read metadata under a lock and respond immediately). Serialised handling eliminates an entire class of concurrency bugs. The added complexity of a thread-per-client model is not justified for a runtime that will handle at most a handful of concurrent CLI calls.
 
 ### IPC and Logging
-**Choice:** Anonymous pipes for logging (Path A), UNIX domain sockets for control (Path B), and a fixed-size ring buffer between producer and consumer threads.  
-**Tradeoff:** The ring buffer has a fixed capacity (16 slots). If all 16 slots fill up faster than the consumer can drain them, producers block. This could cause a container to stall if it is logging very rapidly. A dynamically-growing buffer would avoid this but requires dynamic allocation on the hot path, increasing lock contention and memory overhead.  
+
+**Choice:** Anonymous pipes for logging (Path A), UNIX domain sockets for control (Path B), and a fixed-size ring buffer between producer and consumer threads.
+
+**Tradeoff:** The ring buffer has a fixed capacity (16 slots). If all 16 slots fill up faster than the consumer can drain them, producers block. This could cause a container to stall if it is logging very rapidly. A dynamically-growing buffer would avoid this but requires dynamic allocation on the hot path, increasing lock contention and memory overhead.
+
 **Justification:** 16 slots × 4096 bytes = 64 KB of log buffering. In practice, container workloads do not produce log data faster than the consumer (a simple file write) can drain it. Blocking producers rather than dropping data is the correct semantic for a logging system — it provides backpressure rather than silent data loss.
 
 ### Kernel Monitor
-**Choice:** Used a `mutex` (not a `spinlock`) to protect the monitored list.  
-**Tradeoff:** A mutex can sleep, making it unsuitable for contexts that cannot schedule (hard IRQ handlers, NMI). A spinlock is safe in any context but wastes CPU spinning.  
+
+**Choice:** Used a mutex (not a spinlock) to protect the monitored list.
+
+**Tradeoff:** A mutex can sleep, making it unsuitable for contexts that cannot schedule (hard IRQ handlers, NMI). A spinlock is safe in any context but wastes CPU spinning.
+
 **Justification:** Our timer callback runs in a softirq-like context on older kernels but as a normal schedulable context on kernel 6.x. More importantly, `get_task_mm()` inside `get_rss_bytes()` acquires a sleepable lock internally, which means we cannot hold a spinlock while calling it. A mutex is the only correct choice here.
 
 ### Scheduling Experiments
-**Choice:** Used `--nice` flag at container launch time via the engine CLI.  
-**Tradeoff:** The container itself cannot control its own host scheduling class without `CAP_SYS_NICE`. nice affects CFS weight but does not provide hard CPU guarantees like cgroups would.  
+
+**Choice:** Used `--nice` flag at container launch time via the engine CLI.
+
+**Tradeoff:** The container itself cannot control its own host scheduling class without `CAP_SYS_NICE`. `nice` affects CFS weight but does not provide hard CPU guarantees like cgroups would.
+
 **Justification:** The `--nice` flag in the CLI is implemented and works at container launch time via the `nice()` syscall inside `child_fn`. This gives us direct control without modifying the running supervisor.
 
 ---
@@ -320,9 +356,9 @@ Both `hipri` (nice -5) and `lopri` (nice +10) ran `cpu_hog` for 30 seconds. CFS 
 Both containers ran `/cpu_hog` for 30 seconds simultaneously.
 
 | Container | nice | Approx. iterations completed | Relative CPU share |
-|-----------|------|-----------------------------|--------------------|
-| hipri     | -5   | ~2,100,000,000              | ~75%               |
-| lopri     | +10  | ~700,000,000                | ~25%               |
+|-----------|------|------------------------------|--------------------|
+| hipri | -5 | ~2,100,000,000 | ~75% |
+| lopri | +10 | ~700,000,000 | ~25% |
 
 **Analysis:** CFS weight for nice -5 is ~335; for nice +10 is ~110. Theoretical ratio: 335/(335+110) ≈ 75% vs 25%, which matches our observed results closely. Neither process was starved — lopri still made forward progress — but hipri received proportionally more CPU. This confirms CFS implements weighted fairness, not strict priority.
 
@@ -330,11 +366,11 @@ Both containers ran `/cpu_hog` for 30 seconds simultaneously.
 
 Both containers ran at nice 0 simultaneously for 30 seconds.
 
-| Container | Type    | Avg CPU% | Response latency on wake |
-|-----------|---------|----------|--------------------------|
-| cpuwork   | CPU     | ~92%     | N/A (never sleeps)       |
-| iowork    | I/O     | ~8%      | < 4ms                    |
+| Container | Type | Avg CPU% | Response latency on wake |
+|-----------|------|----------|--------------------------|
+| cpuwork | CPU | ~92% | N/A (never sleeps) |
+| iowork | I/O | ~8% | < 4ms |
 
 **Analysis:** `iowork` spent most of its time sleeping (50ms between I/O bursts). During sleep, its `vruntime` fell behind `cpuwork`'s. When `iowork` woke up, CFS detected its low `vruntime` and immediately preempted `cpuwork` to schedule `iowork`. This demonstrates CFS's responsiveness guarantee: I/O-bound tasks that voluntarily yield the CPU are rewarded with immediate scheduling on wakeup, even when competing with CPU-hungry tasks. This is why Linux feels responsive for interactive workloads even under heavy CPU load.
 
-**Conclusion:** CFS successfully balances throughput (giving CPU-bound tasks maximum compute when I/O tasks are idle) with responsiveness (immediately scheduling I/O tasks when they wake). The `nice` value mechanism provides a straightforward way to express scheduling priority without bypassing fairness entirely.
+**Conclusion:** CFS successfully balances throughput (giving CPU-bound tasks maximum compute when I/O tasks are idle) with responsiveness (immediately scheduling I/O tasks when they wake). The nice value mechanism provides a straightforward way to express scheduling priority without bypassing fairness entirely.
